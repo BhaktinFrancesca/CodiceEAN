@@ -30,39 +30,40 @@ public class CodiceEAN {
         //calcoli
 
         //sysout
-        System.out.println("Il codice EAN popolato è >> " + Arrays.toString(cc.codiceEANPopolato));
-        int somma = cc.sommaPosizioniPari(cc.codiceEAN, cc.lunghezzaCodiceEAN, cc.sommaP);
-        System.out.println("La somma dei numeri in posizioni pari è >> " + somma);
-        int moltiplica = cc.moltiplicaPerTre(cc.sommaP);
-        System.out.println("La moltiplicazione per tre della somma dei numeri pari è uguale a >> " + moltiplica);
-        int sommaDispari = cc.sommaPosizioniDispari(cc.codiceEANPopolato, cc.lunghezzaCodiceEAN, cc.sommaD);
-        System.out.println("La somma dei numeri in posizioni dispari a partire dalla terza posizione è >> "
-                + sommaDispari);
-        int sommaTotale = cc.sommaRisultati(cc.codiceEANPopolato, cc.lunghezzaCodiceEAN, cc.sommaP, cc.sommaD);
-        System.out.println("La somma dei numeri in posizione pari coi numeri della posizione dispari è uguale a >> "
-                + sommaTotale);
-        int ultimaDigit = cc.checkDigit(cc.codiceEANPopolato, cc.lunghezzaCodiceEAN, cc.sommaP, cc.sommaD, cc.checkDigit, cc.sommaDiVerifica);
-        System.out.println("L'ultima cifra del codice è >> " + ultimaDigit);
+        System.out.println("Il codice EAN popolato è >> " + Arrays.toString(cc.getCodiceEANPopolato()));
+        System.out.println("L'ultima cifra del codice è >> " + cc.getCheckDigit());
     }
 }
 
 class CalcoloCodice {
     //attributi
-    public int[] codiceEAN = new int[13];
-    public int lunghezzaCodiceEAN = 13;
-    Random rd = new Random();
-    public int[] codiceEANPopolato = popolaCodiceEAN(lunghezzaCodiceEAN, codiceEAN, rd);
-    public int sommaP = 0;
-    public int sommaD = 0;
-    public int checkDigit = 0;
-    public int sommaDiVerifica = 0;
+    private int lunghezzaCodiceEAN = 13;
+    private int[] codiceEANPopolato = new int[lunghezzaCodiceEAN];
+    private int checkDigit = 0;
+
+    //costruttore
+    public CalcoloCodice() {
+        popolaCodiceEAN();
+
+        int sommaVerifica = sommaRisultati(); // (sommaPosizioniPari() * 3) + sommaDispari()
+        codiceEANPopolato[lunghezzaCodiceEAN - 1] = checkDigit(sommaVerifica);
+    }
+
+    public int[] getCodiceEANPopolato() {
+        return codiceEANPopolato;
+    }
+
+    public int getCheckDigit() {
+        return checkDigit;
+    }
 
     //metodi
     //somma posizioni pari (passo 1) --------------------------------------------------
-    public int sommaPosizioniPari(int[] codiceEANPopolato, int lunghezzaCodiceEAN, int sommaP){
-        for(int i = 0; i < lunghezzaCodiceEAN; i++){
-            if(i % 2 == 0){
-                sommaP = sommaP + codiceEANPopolato[i];
+    private int sommaPosizioniPari(){
+        int sommaP = 0;
+        for (int i = 0; i < lunghezzaCodiceEAN; i++){
+            if((i+1) % 2 == 0){
+                sommaP += codiceEANPopolato[i];
             }
         }
 
@@ -70,39 +71,36 @@ class CalcoloCodice {
     }
 
     //moltiplica per 3 (passo 2) ------------------------------------------------------
-    public int moltiplicaPerTre(int sommaP){
-        int moltiplicazione = sommaPosizioniPari(codiceEANPopolato,lunghezzaCodiceEAN, sommaP) * 3;
+    private int moltiplicaPerTre() {
+        int moltiplicazione = sommaPosizioniPari() * 3;
         return moltiplicazione;
     }
 
     //somma posizioni dispari a partire dalla posizione 3 (passo 3)--------------------
-    public int sommaPosizioniDispari(int[] codiceEANPopolato, int lunghezzaCodiceEAN, int sommaD){
-        for(int i = 2; i < lunghezzaCodiceEAN; i++){
-            if(i % 2 == 1){
-                sommaD = sommaD + codiceEANPopolato[i];
+    private int sommaPosizioniDispari(){
+        int sommaD = 0;
+        for(int i = 0; i < lunghezzaCodiceEAN-1; i++){
+            if((i+1) % 2 == 1){
+                sommaD += codiceEANPopolato[i];
             }
         }
         return sommaD;
     }
 
     //si sommano i due risultati parziali (passo 4) -----------------------------------
-    public int sommaRisultati(int[] codiceEANPopolato, int lunghezzaCodiceEAN, int sommaP, int sommaD){
-        return sommaPosizioniPari(codiceEANPopolato, lunghezzaCodiceEAN, sommaP) +
-                sommaPosizioniDispari(codiceEANPopolato, lunghezzaCodiceEAN, sommaD);
+    private int sommaRisultati(){
+        return moltiplicaPerTre() + sommaPosizioniDispari();
     }
 
     //come check digit si individua il numero da sommare al risultato precedente per ottenere un multiplo di 10
-    public int checkDigit(int[] codiceEANPopolato, int lunghezzaCodiceEAN, int sommaP, int sommaD, int checkDigit, int sommaDiVerifica){
-
-        sommaDiVerifica = sommaRisultati(codiceEANPopolato, lunghezzaCodiceEAN, sommaP, sommaD);
-
-        if (sommaRisultati(codiceEANPopolato, lunghezzaCodiceEAN, sommaP, sommaD) % 10 == 0){
+    private int checkDigit(int sommaDiVerifica){
+        if (sommaDiVerifica % 10 == 0){
             checkDigit = 0;
 
         } else {
             do{
                sommaDiVerifica += 1;
-                checkDigit++;
+               checkDigit++;
 
             } while (sommaDiVerifica % 10 != 0);
         }
@@ -110,11 +108,10 @@ class CalcoloCodice {
     }
 
     //popola il codice EAN ------------------------------------------------------------
-    public int[] popolaCodiceEAN(int lunghezzaCodiceEAN, int[] codiceEANPopolato, Random rd){
-        for (int i = 0; i < lunghezzaCodiceEAN; i++) {
+    private void popolaCodiceEAN(){
+        Random rd = new Random();
+        for (int i = 0; i < codiceEANPopolato.length - 1; i++) {
             codiceEANPopolato[i] = rd.nextInt(9);
         }
-
-        return codiceEANPopolato;
     }
 }
